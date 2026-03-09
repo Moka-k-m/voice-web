@@ -1,10 +1,10 @@
-name: Run TTS Server
+name: 24/7 TTS Server
 
 on:
   schedule:
-    # يعمل كل 6 ساعات (لإعادة تشغيل السيرفر قبل انتهاء المهلة)
-    - cron: '0 */6 * * *'
-  workflow_dispatch: # لتشغيله يدوياً من زر Actions
+    # يعمل كل 5 ساعات و 55 دقيقة
+    - cron: '55 */5 * * *'
+  workflow_dispatch:
 
 jobs:
   run-server:
@@ -22,15 +22,22 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        # تثبيت ffmpeg ضروري لبعض العمليات الصوتية
+        pip install fastapi uvicorn edge-tts pyngrok
         sudo apt-get update && sudo apt-get install -y ffmpeg
 
     - name: Run Server
       env:
-        # يجب إضافة هذا الـ Token في إعدادات المستودع (Settings > Secrets)
-        # احصل عليه من موقع ngrok.com
         NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
       run: |
-        # تشغيل السكريبت
-        python bot.py
+        # تشغيل ملف main.py
+        nohup python main.py > log.txt 2>&1 &
+        
+        # انتظار 15 ثانية لبدء التشغيل
+        sleep 15
+        
+        # طباعة السجلات للتأكد من العمل
+        echo "--- SERVER LOGS ---"
+        cat log.txt
+        
+        # البقاء في حالة انتظار للحفاظ على الحاوية تعمل
+        sleep 21000
